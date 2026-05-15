@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import auth as auth_api
+from app.api import matches as matches_api
 from app.api import resumes as resumes_api
 from app.api import vacancies as vacancies_api
 from app.core.config import get_settings
@@ -66,3 +67,4 @@ async def health() -> dict[str, str]:
 app.include_router(auth_api.router)
 app.include_router(vacancies_api.router)
 app.include_router(resumes_api.router)
+app.include_router(matches_api.router)
