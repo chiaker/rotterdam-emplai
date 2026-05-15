@@ -1,11 +1,13 @@
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 
 from app.core.deps import CurrentUser, DbSession
 from app.db.models import Resume
 from app.schemas.resumes import ResumeListItem, ResumeResponse
+from app.services.background import score_after_upload
+from app.services.enrichment import enrich_document
 from app.services.parser import ParserError, parse
 
 router = APIRouter(prefix="/api/resumes", tags=["resumes"])
@@ -20,6 +22,7 @@ router = APIRouter(prefix="/api/resumes", tags=["resumes"])
 async def upload_resume(
     db: DbSession,
     current_user: CurrentUser,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ) -> Resume:
     if not file.filename:
@@ -35,17 +38,39 @@ async def upload_resume(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
         ) from exc
 
-    candidate_name = Path(file.filename).stem[:255] or None
+    enrichment = await enrich_document(text, kind="resume")
+    ex = enrichment.extraction
+    candidate_name = (
+        (ex.candidate_name[:255] if ex is not None and ex.candidate_name else None)
+        or Path(file.filename).stem[:255]
+        or None
+    )
 
     resume = Resume(
         owner_id=current_user.id,
         candidate_name=candidate_name,
         raw_text=text,
         source_format=source_format,
+        hard_skills=[s.model_dump() for s in ex.hard_skills] if ex else [],
+        soft_skills=list(ex.soft_skills) if ex else [],
+        experience=ex.experience.model_dump() if ex else {},
+        location=ex.location if ex else None,
+        preferred_work_format=ex.preferred_work_format if ex else None,
+        other_traits=ex.other_traits if ex else {},
+        embedding_doc=enrichment.embedding_doc,
+        embedding_skills=enrichment.embedding_skills,
+        embedding_experience=enrichment.embedding_experience,
+        extraction_status=enrichment.status,
     )
     db.add(resume)
     await db.commit()
     await db.refresh(resume)
+
+    if resume.extraction_status == "ok":
+        background_tasks.add_task(
+            score_after_upload, "resume", resume.id, current_user.id
+        )
+
     return resume
 
 

@@ -19,6 +19,7 @@ class VacancyResponse(BaseModel):
     work_format: str | None
     work_hours: str | None
     other_requirements: dict[str, Any]
+    extraction_status: str
     created_at: datetime
 
 
@@ -30,4 +31,5 @@ class VacancyListItem(BaseModel):
     source_format: str
     location: str | None
     work_format: str | None
+    extraction_status: str
     created_at: datetime

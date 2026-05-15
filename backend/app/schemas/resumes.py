@@ -18,6 +18,7 @@ class ResumeResponse(BaseModel):
     location: str | None
     preferred_work_format: str | None
     other_traits: dict[str, Any]
+    extraction_status: str
     created_at: datetime
 
 
@@ -29,4 +30,5 @@ class ResumeListItem(BaseModel):
     source_format: str
     location: str | None
     preferred_work_format: str | None
+    extraction_status: str
     created_at: datetime
