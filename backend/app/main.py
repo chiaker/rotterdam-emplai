@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api import auth as auth_api
 from app.core.config import get_settings
 
 logger = logging.getLogger("emplai")
@@ -58,3 +59,6 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 @app.get("/health", tags=["meta"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+app.include_router(auth_api.router)
