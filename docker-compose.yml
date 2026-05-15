@@ -30,5 +30,14 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
 
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+
 volumes:
   pgdata:
