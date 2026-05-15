@@ -23,6 +23,18 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-opus-4-7"
 
+    GIGACHAT_CREDENTIALS: str = ""
+    GIGACHAT_SCOPE: str = "GIGACHAT_API_PERS"
+    GIGACHAT_MODEL: str = "Embeddings"
+    GIGACHAT_VERIFY_SSL: bool = False
+
+    MATCH_SCORE_THRESHOLD: int = 85
+    LLM_CONCURRENCY: int = 5
+    VECTOR_PREFILTER_K: int = 30
+    SCORING_TOP_K: int = 15
+    DEFAULT_MATCH_TOP_N: int = 10
+    MAX_MATCH_TOP_N: int = 50
+
     @computed_field
     @property
     def database_url(self) -> str:
