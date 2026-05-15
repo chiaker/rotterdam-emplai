@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     DateTime,
     ForeignKey,
@@ -16,6 +17,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
+
+EMBEDDING_DIM = 1024  # GigaChat Embeddings model
 
 
 class User(Base, TimestampMixin):
@@ -60,6 +63,19 @@ class Vacancy(Base, TimestampMixin):
         JSONB, nullable=False, default=dict, server_default="{}"
     )
 
+    embedding_doc: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    embedding_skills: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    embedding_experience: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    extraction_status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="pending", server_default="pending"
+    )
+
     owner: Mapped[User] = relationship(back_populates="vacancies")
     matches: Mapped[list["Match"]] = relationship(
         back_populates="vacancy", cascade="all, delete-orphan"
@@ -68,6 +84,12 @@ class Vacancy(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_vacancies_hard_skills_gin", "hard_skills", postgresql_using="gin"),
         Index("ix_vacancies_soft_skills_gin", "soft_skills", postgresql_using="gin"),
+        Index(
+            "ix_vacancies_embedding_doc_hnsw",
+            "embedding_doc",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding_doc": "vector_cosine_ops"},
+        ),
     )
 
 
@@ -97,6 +119,19 @@ class Resume(Base, TimestampMixin):
         JSONB, nullable=False, default=dict, server_default="{}"
     )
 
+    embedding_doc: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    embedding_skills: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    embedding_experience: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIM), nullable=True
+    )
+    extraction_status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="pending", server_default="pending"
+    )
+
     owner: Mapped[User] = relationship(back_populates="resumes")
     matches: Mapped[list["Match"]] = relationship(
         back_populates="resume", cascade="all, delete-orphan"
@@ -105,6 +140,12 @@ class Resume(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_resumes_hard_skills_gin", "hard_skills", postgresql_using="gin"),
         Index("ix_resumes_soft_skills_gin", "soft_skills", postgresql_using="gin"),
+        Index(
+            "ix_resumes_embedding_doc_hnsw",
+            "embedding_doc",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding_doc": "vector_cosine_ops"},
+        ),
     )
 
 
