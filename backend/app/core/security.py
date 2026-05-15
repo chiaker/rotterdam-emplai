@@ -1,22 +1,27 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.core.config import get_settings
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+_BCRYPT_MAX_BYTES = 72  # bcrypt 4.x enforces this hard limit
+
+
+def _truncate(plain: str) -> bytes:
+    return plain.encode("utf-8")[:_BCRYPT_MAX_BYTES]
 
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return bcrypt.hashpw(_truncate(plain), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     try:
-        return pwd_context.verify(plain, hashed)
+        return bcrypt.checkpw(_truncate(plain), hashed.encode("utf-8"))
     except (ValueError, TypeError):
         return False
 
