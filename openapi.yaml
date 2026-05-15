@@ -275,6 +275,194 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/matches/vacancy/{vacancy_id}:
+    get:
+      tags:
+      - matches
+      summary: Топ-N резюме под вакансию (score ≥ порог)
+      operationId: matches_for_vacancy_api_matches_vacancy__vacancy_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: vacancy_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Vacancy Id
+      - name: top
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          title: Top
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/matches/resume/{resume_id}:
+    get:
+      tags:
+      - matches
+      summary: Топ-K вакансий под резюме (score ≥ порог)
+      operationId: matches_for_resume_api_matches_resume__resume_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: resume_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Resume Id
+      - name: top
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          title: Top
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/matches/orphan-vacancies:
+    get:
+      tags:
+      - matches
+      summary: Вакансии без матчей ≥ порога
+      operationId: orphan_vacancies_api_matches_orphan_vacancies_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: top
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          title: Top
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrphanList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/matches/orphan-resumes:
+    get:
+      tags:
+      - matches
+      summary: Резюме без матчей ≥ порога
+      operationId: orphan_resumes_api_matches_orphan_resumes_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: top
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          title: Top
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrphanList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/matches/recompute/vacancy/{vacancy_id}:
+    post:
+      tags:
+      - matches
+      summary: Запустить скоринг для вакансии (минуя кэш только для новых пар)
+      operationId: recompute_vacancy_api_matches_recompute_vacancy__vacancy_id__post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: vacancy_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Vacancy Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecomputeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/matches/recompute/resume/{resume_id}:
+    post:
+      tags:
+      - matches
+      summary: Запустить скоринг для резюме (минуя кэш только для новых пар)
+      operationId: recompute_resume_api_matches_recompute_resume__resume_id__post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: resume_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Resume Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecomputeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     Body_login_api_auth_login_post:
@@ -341,6 +529,133 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    MatchItem:
+      properties:
+        vacancy_id:
+          type: integer
+          title: Vacancy Id
+        resume_id:
+          type: integer
+          title: Resume Id
+        score:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 0.0
+          - type: 'null'
+          title: Score
+        explanation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Explanation
+        matching_skills:
+          items:
+            type: string
+          type: array
+          title: Matching Skills
+        missing_skills:
+          items:
+            type: string
+          type: array
+          title: Missing Skills
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        computed_at:
+          type: string
+          format: date-time
+          title: Computed At
+      type: object
+      required:
+      - vacancy_id
+      - resume_id
+      - computed_at
+      title: MatchItem
+      description: One scored pair in a match list response.
+    MatchList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/MatchItem'
+          type: array
+          title: Items
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - items
+      title: MatchList
+      description: Top-N matches for a vacancy or resume.
+    OrphanItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        best_score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Best Score
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        candidate_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Candidate Name
+      type: object
+      required:
+      - id
+      title: OrphanItem
+      description: One vacancy or resume with no matches above threshold.
+    OrphanList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/OrphanItem'
+          type: array
+          title: Items
+        threshold:
+          type: integer
+          title: Threshold
+      type: object
+      required:
+      - items
+      - threshold
+      title: OrphanList
+    RecomputeResponse:
+      properties:
+        vacancy_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Vacancy Id
+        resume_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Resume Id
+        scored:
+          type: integer
+          title: Scored
+          default: 0
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+      type: object
+      title: RecomputeResponse
+      description: Returned after a manual recompute trigger.
     RegisterRequest:
       properties:
         email:
@@ -380,6 +695,9 @@ components:
           - type: string
           - type: 'null'
           title: Preferred Work Format
+        extraction_status:
+          type: string
+          title: Extraction Status
         created_at:
           type: string
           format: date-time
@@ -391,6 +709,7 @@ components:
       - source_format
       - location
       - preferred_work_format
+      - extraction_status
       - created_at
       title: ResumeListItem
     ResumeResponse:
@@ -442,6 +761,9 @@ components:
           additionalProperties: true
           type: object
           title: Other Traits
+        extraction_status:
+          type: string
+          title: Extraction Status
         created_at:
           type: string
           format: date-time
@@ -459,6 +781,7 @@ components:
       - location
       - preferred_work_format
       - other_traits
+      - extraction_status
       - created_at
       title: ResumeResponse
     TokenResponse:
@@ -518,6 +841,9 @@ components:
           - type: string
           - type: 'null'
           title: Work Format
+        extraction_status:
+          type: string
+          title: Extraction Status
         created_at:
           type: string
           format: date-time
@@ -529,6 +855,7 @@ components:
       - source_format
       - location
       - work_format
+      - extraction_status
       - created_at
       title: VacancyListItem
     VacancyResponse:
@@ -583,6 +910,9 @@ components:
           additionalProperties: true
           type: object
           title: Other Requirements
+        extraction_status:
+          type: string
+          title: Extraction Status
         created_at:
           type: string
           format: date-time
@@ -601,6 +931,7 @@ components:
       - work_format
       - work_hours
       - other_requirements
+      - extraction_status
       - created_at
       title: VacancyResponse
     ValidationError:
