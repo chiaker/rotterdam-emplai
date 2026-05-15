@@ -1,0 +1,638 @@
+openapi: 3.1.0
+info:
+  title: Rotterdam EmplAI API
+  description: 'AI-ассистент рекрутера: парсинг вакансий и резюме, скоринг кандидатов'
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      tags:
+      - meta
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Health Get
+  /api/auth/register:
+    post:
+      tags:
+      - auth
+      summary: Register
+      operationId: register_api_auth_register_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      operationId: login_api_auth_login_post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_login_api_auth_login_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/auth/me:
+    get:
+      tags:
+      - auth
+      summary: Me
+      operationId: me_api_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/vacancies:
+    get:
+      tags:
+      - vacancies
+      summary: List Vacancies
+      operationId: list_vacancies_api_vacancies_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/VacancyListItem'
+                type: array
+                title: Response List Vacancies Api Vacancies Get
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - vacancies
+      summary: Загрузить вакансию из файла (txt/pdf/docx)
+      operationId: upload_vacancy_api_vacancies_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_vacancy_api_vacancies_post'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacancyResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/vacancies/{vacancy_id}:
+    get:
+      tags:
+      - vacancies
+      summary: Get Vacancy
+      operationId: get_vacancy_api_vacancies__vacancy_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: vacancy_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Vacancy Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacancyResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - vacancies
+      summary: Delete Vacancy
+      operationId: delete_vacancy_api_vacancies__vacancy_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: vacancy_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Vacancy Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/resumes:
+    get:
+      tags:
+      - resumes
+      summary: List Resumes
+      operationId: list_resumes_api_resumes_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ResumeListItem'
+                type: array
+                title: Response List Resumes Api Resumes Get
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - resumes
+      summary: Загрузить резюме из файла (txt/pdf/docx)
+      operationId: upload_resume_api_resumes_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_resume_api_resumes_post'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/resumes/{resume_id}:
+    get:
+      tags:
+      - resumes
+      summary: Get Resume
+      operationId: get_resume_api_resumes__resume_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: resume_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Resume Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - resumes
+      summary: Delete Resume
+      operationId: delete_resume_api_resumes__resume_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: resume_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Resume Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Body_login_api_auth_login_post:
+      properties:
+        grant_type:
+          anyOf:
+          - type: string
+            pattern: ^password$
+          - type: 'null'
+          title: Grant Type
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          format: password
+          title: Password
+        scope:
+          type: string
+          title: Scope
+          default: ''
+        client_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Client Id
+        client_secret:
+          anyOf:
+          - type: string
+          - type: 'null'
+          format: password
+          title: Client Secret
+      type: object
+      required:
+      - username
+      - password
+      title: Body_login_api_auth_login_post
+    Body_upload_resume_api_resumes_post:
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+      type: object
+      required:
+      - file
+      title: Body_upload_resume_api_resumes_post
+    Body_upload_vacancy_api_vacancies_post:
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+      type: object
+      required:
+      - file
+      title: Body_upload_vacancy_api_vacancies_post
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    RegisterRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          maxLength: 128
+          minLength: 8
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: RegisterRequest
+    ResumeListItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        candidate_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Candidate Name
+        source_format:
+          type: string
+          title: Source Format
+        location:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location
+        preferred_work_format:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Work Format
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - candidate_name
+      - source_format
+      - location
+      - preferred_work_format
+      - created_at
+      title: ResumeListItem
+    ResumeResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        owner_id:
+          type: integer
+          title: Owner Id
+        candidate_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Candidate Name
+        raw_text:
+          type: string
+          title: Raw Text
+        source_format:
+          type: string
+          title: Source Format
+        hard_skills:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Hard Skills
+        soft_skills:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Soft Skills
+        experience:
+          additionalProperties: true
+          type: object
+          title: Experience
+        location:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location
+        preferred_work_format:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Work Format
+        other_traits:
+          additionalProperties: true
+          type: object
+          title: Other Traits
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - owner_id
+      - candidate_name
+      - raw_text
+      - source_format
+      - hard_skills
+      - soft_skills
+      - experience
+      - location
+      - preferred_work_format
+      - other_traits
+      - created_at
+      title: ResumeResponse
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        expires_in:
+          type: integer
+          title: Expires In
+      type: object
+      required:
+      - access_token
+      - expires_in
+      title: TokenResponse
+    UserResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        email:
+          type: string
+          format: email
+          title: Email
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - email
+      - created_at
+      title: UserResponse
+    VacancyListItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        title:
+          type: string
+          title: Title
+        source_format:
+          type: string
+          title: Source Format
+        location:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location
+        work_format:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Work Format
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - title
+      - source_format
+      - location
+      - work_format
+      - created_at
+      title: VacancyListItem
+    VacancyResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        owner_id:
+          type: integer
+          title: Owner Id
+        title:
+          type: string
+          title: Title
+        raw_text:
+          type: string
+          title: Raw Text
+        source_format:
+          type: string
+          title: Source Format
+        hard_skills:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Hard Skills
+        soft_skills:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Soft Skills
+        experience:
+          additionalProperties: true
+          type: object
+          title: Experience
+        location:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location
+        work_format:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Work Format
+        work_hours:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Work Hours
+        other_requirements:
+          additionalProperties: true
+          type: object
+          title: Other Requirements
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - owner_id
+      - title
+      - raw_text
+      - source_format
+      - hard_skills
+      - soft_skills
+      - experience
+      - location
+      - work_format
+      - work_hours
+      - other_requirements
+      - created_at
+      title: VacancyResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /api/auth/login
