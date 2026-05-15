@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import auth as auth_api
+from app.api import vacancies as vacancies_api
 from app.core.config import get_settings
 
 logger = logging.getLogger("emplai")
@@ -62,3 +63,4 @@ async def health() -> dict[str, str]:
 
 
 app.include_router(auth_api.router)
+app.include_router(vacancies_api.router)
